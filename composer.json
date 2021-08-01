@@ -1,0 +1,19 @@
+{
+    "name": "charm/uuid",
+    "description": "A single class UUID generator, generates compliant RFC4122 UUID version 1 and 4 and Snowflake sortable UIDs.",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Charm\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Frode Børli",
+            "email": "frode@ennerd.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {}
+}
