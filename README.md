@@ -2,7 +2,98 @@ A very fast UUID generator
 ==========================
 
 After looking at other libraries, they seem very complex for the most common use case:
-generating UUIDs.
+generating UUIDs. Now, UUIDs are quite complex in themselves, and it is easy to make mistakes
+so that the UUID is not truly unique. That's why I feel the library should be as simple as
+possible, so that it is easy to review.
+
+This library provides two classes and has no dependencies.
+
+Service Object API
+------------------
+
+```
+use Charm\Util\IdFactory;
+
+// Configure the service provider object
+$idGenerator = new IdFactory(IdFactory::TYPE_UUID_V1, [
+    /**
+     * If you specify a machine id here, no effort is needed to retrieve a machine id.
+     * The value should be globally unique for UUID V1, or unique for the organization
+     * for snowflake/instaflake/sonyflake type IDs.
+     */
+    'machineId' => null,
+
+    /**
+     * The sequence number is a number which is supposed to ensure that we don't generate
+     * two IDs on the same computer within the same time interval. The default value is derived
+     * from `getmypid()` which should cause diffent workers to start on a different sequence
+     * number.
+     */
+    'initialSequenceNumber' => null,
+
+    /**
+     * The epoch for the snowflake and derivatives ID generators is a unix
+     * timestamp.
+     */
+    'epoch' => strtotime('2019-01-01 00:00:00'),
+
+    /**
+     * Allow fetching the computers mac address for machine id?
+     */
+    'allowMacAddress' => true,
+
+    /**
+     * Allow using the Kubernetes hostname UID part for machine id?
+     */
+    'allowKubernetesId' => true,
+
+    /**
+     * Allow unique machine ID from /var/lib/dbus/machine-id or on Windows, the registry entry in 
+     * 'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Cryptography\MachineGuid'?
+     */
+    'allowMachineId' => true,
+
+    /**
+     * You can provide a custom function that provides a unique ID for the machine. The function
+     * must return a positive integer or NULL.
+     */
+    'customMachineIdFunction' => null,
+]);
+
+// Generate a new ID. The type of ID is determined by the `$type` specified in the constructor.
+$idGenerator(); // c85fb57a-f391-11eb-bb00-0242ee781401
+```
+
+Static API
+----------
+
+```
+use Charm\Id;
+use Charm\Util\IdFactory;
+
+// Optionally configure the id factory
+Id::configure(IdFactory::TYPE_UUID_V4);
+
+// Generate the default ID type
+Id::id();
+// 47e3c427-3f82-4dc7-a6ca-c83561a9cdfb
+
+// Or use any of the other factory methods to create a particular type of ID
+Charm\Id::uuid1();
+// c85fb57a-f391-11eb-bb00-0242ee781401
+
+Charm\Id::uuid4();
+// 47e3c427-3f82-4dc7-a6ca-c83561a9cdfb
+
+Charm\Id::snowflake();
+// 262805082062461697
+
+Charm\Id::instaflake();
+// 262805082067699458
+
+Charm\Id::sonyflake();
+// 33064438777189377
+```
 
 This single class has a single purpose; generate compliant unique ID as fast as possible,
 while being compliant. There is no functionality to analyze the IDs.
