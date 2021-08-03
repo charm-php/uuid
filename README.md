@@ -68,8 +68,9 @@ If you're not using a service container, the quickest way to begin is by using t
 `Charm\Id::make()`. The returned value will be a unique ID that nobody else have ever seen
 before.
 
-   <?php
-   /**
+```
+<?php
+/**
     * UUID v4
     *
     * An ID that can be shared with others, and you should never see a collision.
@@ -85,7 +86,7 @@ before.
     */
    $snowflakeId = Charm\Id::snowflake();
    // 262805082062461697
-
+```
 
 Service Object API
 ------------------
