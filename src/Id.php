@@ -3,8 +3,6 @@ namespace Charm;
 
 use Charm\Util\IdFactory;
 
-require('Util/IdFactory.php');
-
 final class Id {
 
     /**
@@ -23,7 +21,10 @@ final class Id {
     /**
      * Generate a new ID according to the configuration.
      */
-    public static function id() {
+    public static function make() {
+        if (self::$factory === null) {
+            return self::uuid4();
+        }
         return (self::$factory ?? self::getFactory())();
     }
 
@@ -38,7 +39,22 @@ final class Id {
      * Generate a new UUID version 4
      */
     public static function uuid4(): string {
-        return (self::$factory ?? self::getFactory())->v4();
+//        return IdFactory::v4();
+        $hex = bin2hex($bytes = random_bytes(18));
+        $hex[8] = '-';
+        $hex[13] = '-';
+        $hex[14] = '4';
+        $hex[18] = '-';
+        $hex[19] = '89ab'[ord($bytes[9]) >> 6];
+        $hex[23] = '-';
+        return $hex;
+    }
+
+    /**
+     * Generate a combined time GUID
+     */
+    public static function comb(): string {
+        return (self::$factory ?? self::getFactory())->comb();
     }
 
     /**

@@ -5,6 +5,7 @@ use Closure;
 
 class IdFactory {
 
+    const TYPE_UUID_V0 = 5;
     const TYPE_UUID_V1 = 0;
     const TYPE_UUID_V4 = 1;
     const TYPE_SNOWFLAKE = 2;
@@ -79,13 +80,82 @@ class IdFactory {
     protected int $type;
     protected int $epoch;
     protected int $sequenceNumber;
+    protected int $hrOffset;
     private ?int $_machineId = null;
 
-    public function __construct(int $type=self::TYPE_UUID_V1, array $options=[]) {
+    public function __construct(int $type=self::TYPE_UUID_V4, array $options=[]) {
         $this->type = $type;
         $this->options = $options + self::OPTIONS;
         $this->epoch = $this->options['epoch'];
         $this->sequenceNumber = $this->getInitialSequenceNumber();
+        $this->nanoTime();
+    }
+
+    /**
+     * Returns a time stamp with nanoTime precision
+     */
+    public static function nanoTime() {
+        static $diff = null;
+        $nt = hrtime();
+        if ($diff === null) {
+            $mt2 = explode(" ", microtime());
+            $diff = [
+                (int) $mt2[1] - $nt[0],
+                $mt2[0] * 1000000000 - $nt[1],
+            ];
+        }
+
+        $res = [ $nt[0] + $diff[0], $nt[1] + $diff[1] ];
+        if ($res[1] < 0) {
+            $res[0]--;
+            $res[1] += 1000000000;
+        } elseif ($res[1] >= 1000000000) {
+            $res[0]++;
+            $res[1] -= 1000000000;
+        }
+        return $res;
+    }
+
+    /**
+     * Returns a 64 bit timestamp, where 36 bits is used for the seconds and
+     * 28 bits is used for the fractions of a second.
+     */
+    public static function hexNanoTime() {
+        $nt = static::nanoTime();
+        $fraction = $nt[1];
+        $binaryFraction = 0;
+        for ($i = 0; $i < 28; $i++) {
+            $binaryFraction <<= 1;
+            $fraction *= 2;
+            if ($fraction >= 1000000000) {
+                $binaryFraction |= 1;
+                $fraction -= 1000000000;
+            }
+        }
+        return sprintf('%09x%07x', $nt[0], $binaryFraction);
+    }
+
+    /**
+     * Generate a "comb uuid", which is is sequential and validates as an UUID v4. 60 bits is used for the time stamp,
+     * where 24 bits is used for the fraction of a second and the timestamp begins at UNIX epoch
+     *
+     * Specification:
+     *
+     *   Timestamp          60 bit      36 bits seconds and 24 bits fractions of seconds since unix epoch
+     *   Clock Sequence     14 bit      A "uniquifying" clock sequence which increments by one for every ID generated
+     *   Machine ID         48 bit      A unique number for the current computer. Should be globally unique.
+     *
+     * Return value is a 128 bit UUID string encoded according to the standard, or as a 128 bit big-endian binary string.
+     */
+    public function comb() {
+        $ts = self::hexNanoTime();
+        $res =
+            substr($ts, 0, 8).
+            '-'.substr($ts, 8, 4).
+            '-4'.substr($ts, 12, 3).
+            '-'.sprintf('%04x-%012x', ($this->sequenceNumber++ & 0x3FFF) + 0x8000, $this->getMachineId() & 0xFFFFFFFFFFFF);
+
+        return $res;
     }
 
     /**
@@ -139,7 +209,7 @@ class IdFactory {
         $hex[13] = '-';
         $hex[14] = '4';
         $hex[18] = '-';
-        $hex[19] = '89ab'[ord($bytes[9]) % 4];
+        $hex[19] = '89ab'[ord($bytes[9]) >> 6];
         $hex[23] = '-';
         return $hex;
     }
@@ -187,22 +257,20 @@ class IdFactory {
         if (\PHP_OS_FAMILY === 'Windows' && $this->options['allowMachineId']) {
             // Fetch MachineGuid from the registry
             $res = shell_exec('reg query '.escapeshellarg('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Cryptography').' -v '.escapeshellarg('MachineGuid'));
-            if (!$res) {
-                break;
-            }
-            $res = explode("\n", trim($res));
-            if (!isset($res[1])) {
-                break;
-            }
-            $res = explode("    ", $res[1])[3];
-            $res = md5($res);
-            $res = substr($res, -16);
-            $res[0] = dechex(hexdec($res[0]) & 7);
-            $id = hexdec($res);
+            if ($res) {
+                $res = explode("\n", trim($res));
+                if (isset($res[1])) {
+                    $res = explode("    ", $res[1])[3];
+                    $res = md5($res);
+                    $res = substr($res, -16);
+                    $res[0] = dechex(hexdec($res[0]) & 7);
+                    $id = hexdec($res);
 
-            // multicast bit in mac address should be on to indicate that this is not a mac address
-            $id |= 1 << 40;
-            return $this->_machineId = $id;
+                    // multicast bit in mac address should be on to indicate that this is not a mac address
+                    $id |= 1 << 40;
+                    return $this->_machineId = $id;
+                }
+            }
         }
 
         if (\PHP_OS_FAMILY !== 'Windows' && $this->options['allowMacAddress']) {
@@ -269,6 +337,8 @@ class IdFactory {
                 return $this->instaflake();
             case self::TYPE_SONYFLAKE :
                 return $this->sonyflake();
+            case self::TYPE_UUID_V0 :
+                return $this->v0();
             default :
                 throw new Exception("Unknown type specified");
         }
