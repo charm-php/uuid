@@ -1,6 +1,6 @@
 {
     "name": "charm/uuid",
-    "description": "A very fast and dependency free library to generate UUIDs (GUIDs) version 1 or 4, or 64 bit unique identifiers according to snowflake, sonyflake or instaflake algorithms.",
+    "description": "A very fast and dependency free library to generate UUIDs (GUIDs) version 1 or 4, sortable UUIDs that validates, or 64 bit unique identifiers according to Twitters' Snowflake, sonyflake or instaflake algorithms.",
     "type": "library",
     "license": "MIT",
     "autoload": {
