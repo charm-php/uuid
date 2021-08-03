@@ -5,9 +5,9 @@ use Closure;
 
 class IdFactory {
 
-    const TYPE_UUID_V0 = 5;
     const TYPE_UUID_V1 = 0;
     const TYPE_UUID_V4 = 1;
+    const TYPE_UUID_COMB = 5;
     const TYPE_SNOWFLAKE = 2;
     const TYPE_INSTAFLAKE = 3;
     const TYPE_SONYFLAKE = 4;
@@ -92,7 +92,9 @@ class IdFactory {
     }
 
     /**
-     * Returns a time stamp with nanoTime precision
+     * Returns a UNIX time stamp with close to nanosecond precision. Note that the
+     * *first* call to this function will be rounded to microsecond precision.
+     * Nanosecond precision is achieved from consecutive calls to this function.
      */
     public static function nanoTime() {
         static $diff = null;
@@ -118,7 +120,8 @@ class IdFactory {
 
     /**
      * Returns a 64 bit timestamp, where 36 bits is used for the seconds and
-     * 28 bits is used for the fractions of a second.
+     * 28 bits is used for the fractions of a second. The precision is about
+     * 4 nanoseconds.
      */
     public static function hexNanoTime() {
         $nt = static::nanoTime();
@@ -337,8 +340,8 @@ class IdFactory {
                 return $this->instaflake();
             case self::TYPE_SONYFLAKE :
                 return $this->sonyflake();
-            case self::TYPE_UUID_V0 :
-                return $this->v0();
+            case self::TYPE_UUID_COMB :
+                return $this->comb();
             default :
                 throw new Exception("Unknown type specified");
         }

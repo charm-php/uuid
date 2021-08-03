@@ -65,8 +65,58 @@ Quick Start
 -----------
 
 If you're not using a service container, the quickest way to begin is by using the function
-`Charm\Id::make()`. The returned value will be a unique ID that nobody else have ever seen
-before.
+`Charm\Id::make()`. The returned value will be a cryptographically random 128 bit value
+in UUID v4 form (XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX).
+
+
+### Installation
+
+As with most PHP packages, install `composer` and run
+
+```bash
+# composer require charm/uuid
+```
+
+Alternatively you can of course clone the repository from https://github.com/charm-php/uuid
+and include the `./autoload.php` file we've provided.
+
+
+### UUID v4
+
+This is the fastest and easiest to use, as it has no configuration options. The probability 
+of a collission is microscopic. The number of different combinations is approximately 5,3169e+36. 
+
+*If collisions happen, it is because of bugs in the generator. The ramsay
+If you've heard that collisions happen, you can be quite certain that the collision happened
+because of using an inferior random number generator.*
+
+Quotes from around the web:
+
+| If you generate 103 trillion UUID v4, the probability of a collision is about 1 in a billion.
+
+| If you have a database of 1 petabyte of UUIDs, the probability of a single collision is
+| one in 50 billion.
+
+| If you generate 8 billion UUIDs per second, 
+
+
+```php
+<?php
+echo Charm\Id::make();
+// "47e3c427-3f82-4dc7-a6ca-c83561a9cdfb"
+```` 
+
+### UUID v1
+
+This UUID is guaranteed to be unique, provided you have a unique machine ID - for example using
+a MAC address.
+
+```php
+<?php
+echo Charm\Id::v1();
+// "c85fb57a-f391-11eb-bb00-0242ee781401"
+```
+
 
 ```php
 <?php
@@ -75,8 +125,8 @@ before.
  *
  * An ID that can be shared with others, and you should never see a collision.
  */
-$uniqueId = Charm\Id::make();
-// 47e3c427-3f82-4dc7-a6ca-c83561a9cdfb
+$uniqueId = Charm\Id::make();               // returns a 36 char string
+// "47e3c427-3f82-4dc7-a6ca-c83561a9cdfb"
 
 /**
  * Snowflake, by Twitter
@@ -84,18 +134,18 @@ $uniqueId = Charm\Id::make();
  * A 64 bit integer which can be considered unique within your organization, built from
  * a timestamp, a machine id and a sequence number.
  */
-$snowflakeId = Charm\Id::snowflake();
+$snowflakeId = Charm\Id::snowflake(); // returns 64 bit int value
 // 262805082062461697
 ```
 
 Service Object API
 ------------------
 
+
 ```php
 <?php
 use Charm\Util\IdFactory;
 
-// Configure the service provider object
 $idGenerator = new IdFactory(IdFactory::TYPE_UUID_V1, [
     /**
      * If you specify a machine id here, no effort is needed to retrieve a machine id.
