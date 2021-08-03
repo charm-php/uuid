@@ -69,6 +69,7 @@ If you're not using a service container, the quickest way to begin is by using t
 before.
 
 ```php
+<?php
 /**
  * UUID v4
  *
@@ -91,6 +92,7 @@ Service Object API
 ------------------
 
 ```php
+<?php
 use Charm\Util\IdFactory;
 
 // Configure the service provider object
@@ -147,6 +149,7 @@ Static API
 ----------
 
 ```php
+<?php
 use Charm\Id;
 use Charm\Util\IdFactory;
 
