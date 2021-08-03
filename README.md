@@ -68,25 +68,23 @@ If you're not using a service container, the quickest way to begin is by using t
 `Charm\Id::make()`. The returned value will be a unique ID that nobody else have ever seen
 before.
 
-```
-<?php
-/**
- * UUID v4
- *
- * An ID that can be shared with others, and you should never see a collision.
- */
-$uniqueId = Charm\Id::make();
-// 47e3c427-3f82-4dc7-a6ca-c83561a9cdfb
+   <?php
+   /**
+    * UUID v4
+    *
+    * An ID that can be shared with others, and you should never see a collision.
+    */
+   $uniqueId = Charm\Id::make();
+   // 47e3c427-3f82-4dc7-a6ca-c83561a9cdfb
 
-/**
- * Snowflake, by Twitter
- *
- * A 64 bit integer which can be considered unique within your organization, built from
- * a timestamp, a machine id and a sequence number.
- */
-$snowflakeId = Charm\Id::snowflake();
-// 262805082062461697
-```
+   /**
+    * Snowflake, by Twitter
+    *
+    * A 64 bit integer which can be considered unique within your organization, built from
+    * a timestamp, a machine id and a sequence number.
+    */
+   $snowflakeId = Charm\Id::snowflake();
+   // 262805082062461697
 
 
 Service Object API
