@@ -7,7 +7,7 @@ These benchmarks can be repeated with the `benchmarks/benchmarks.php` script.
 ----------------------------------
 Measured the time it takes to generate *a single UUID v1*.
 
-> charm/uuid is **faster then ramsey/uuid and similar to the pecl extension** in all benchmarks.
+> ⭐charm/uuid is **faster then ramsey/uuid and similar to the pecl extension** in all benchmarks.
 
 | Library     | Runs | Average Time | Median Time | Fastest   | Slowest   | Included files |
 |-------------|------|--------------|-------------|-----------|-----------|----------------|
@@ -19,7 +19,7 @@ Measured the time it takes to generate *a single UUID v1*.
 -----------------------------
 Measured the time it takes to generate 100 000 UUID v4 with 20 repetitions.
 
-> charm/uuid is **faster then ramsey/uuid and the pecl extension** in all benchmarks.
+> ⭐charm/uuid is **faster then ramsey/uuid and the pecl extension** in all benchmarks.
 
 | Library     | Runs | Average Time | Median Time | Fastest     | Slowest     | Included files |
 |-------------|------|--------------|-------------|-------------|-------------|----------------|
@@ -31,7 +31,7 @@ Measured the time it takes to generate 100 000 UUID v4 with 20 repetitions.
 ----------------------------------
 Measured the time it takes to generate *a single UUID v4*.
 
-> charm/uuid is **faster then ramsey/uuid** in all benchmarks, but slower then the pecl extension.
+> ⭐charm/uuid is **faster then ramsey/uuid** in all benchmarks, but slower then the pecl extension.
 
 | Library     | Runs | Average Time | Median Time | Fastest   | Slowest   | Included files |
 |-------------|------|--------------|-------------|-----------|-----------|----------------|
@@ -43,7 +43,7 @@ Measured the time it takes to generate *a single UUID v4*.
 -----------------------------
 Measured the time it takes to generate 100 000 UUID v4 with 20 repetitions.
 
-> charm/uuid is **faster then ramsey/uuid and the pecl extension** in all benchmarks.
+> ⭐charm/uuid is **faster then ramsey/uuid and the pecl extension** in all benchmarks.
 
 | Library     | Runs | Average Time | Median Time | Fastest     | Slowest     | Included files |
 |-------------|------|--------------|-------------|-------------|-------------|----------------|
