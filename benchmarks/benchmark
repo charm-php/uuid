@@ -1,0 +1,631 @@
+#!/usr/bin/env php
+<?php
+namespace {
+
+    $config = [
+        'single' => [
+            'repetitions' => 10,
+            'iterations' => 1,
+        ],
+        'scalability' => [
+            'repetitions' => 2,
+            'duration' => 3,
+        ],
+    ];
+
+    $benchmarks = [
+        'Single UUID v1 generation time' => [
+            'charm/uuid' => [
+                'eval' => 'Charm\Id::uuid1();',
+            ] + $config['single'],
+            'ramsey/uuid' => [
+                'eval' => 'Ramsey\Uuid\Uuid::uuid1();',
+            ] + $config['single'],
+            'pecl:uuid' => [
+                'eval' => 'uuid_create(UUID_TYPE_TIME);',
+            ] + $config['single'],
+        ],
+        'Single UUID v4 generation time' => [
+            'charm/uuid' => [
+                'eval' => 'Charm\Id::uuid4();',
+            ] + $config['single'],
+            'ramsey/uuid' => [
+                'eval' => 'Ramsey\Uuid\Uuid::uuid4();',
+            ] + $config['single'],
+            'pecl:uuid' => [
+                'eval' => 'uuid_create(UUID_TYPE_RANDOM);',
+            ] + $config['single'],
+        ],
+        'charm/uuid scalability' => [
+            '1 procs' => [
+                'eval' => 'Charm\Id::uuid1();',
+                'concurrency' => 1,
+            ] + $config['scalability'],
+            '2 procs' => [
+                'eval' => 'Charm\Id::uuid1();',
+                'concurrency' => 2,
+            ] + $config['scalability'],
+            '4 procs' => [
+                'eval' => 'Charm\Id::uuid1();',
+                'concurrency' => 4,
+            ] + $config['scalability'],
+            '8 procs' => [
+                'eval' => 'Charm\Id::uuid1();',
+                'concurrency' => 8,
+            ] + $config['scalability'],
+            '16 procs' => [
+                'eval' => 'Charm\Id::uuid1();',
+                'concurrency' => 16,
+            ] + $config['scalability'],
+            '32 procs' => [
+                'eval' => 'Charm\Id::uuid1();',
+                'concurrency' => 32,
+            ] + $config['scalability'],
+        ],
+        'ramsey/uuid scalability' => [
+            '1 procs' => [
+                'eval' => 'Ramsey\Uuid\Uuid::uuid1();',
+                'concurrency' => 1,
+            ] + $config['scalability'],
+            '2 procs' => [
+                'eval' => 'Ramsey\Uuid\Uuid::uuid1();',
+                'concurrency' => 2,
+            ] + $config['scalability'],
+            '4 procs' => [
+                'eval' => 'Ramsey\Uuid\Uuid::uuid1();',
+                'concurrency' => 4,
+            ] + $config['scalability'],
+            '8 procs' => [
+                'eval' => 'Ramsey\Uuid\Uuid::uuid1();',
+                'concurrency' => 8,
+            ] + $config['scalability'],
+            '16 procs' => [
+                'eval' => 'Ramsey\Uuid\Uuid::uuid1();',
+                'concurrency' => 16,
+            ] + $config['scalability'],
+            '32 procs' => [
+                'eval' => 'Ramsey\Uuid\Uuid::uuid1();',
+                'concurrency' => 32,
+            ] + $config['scalability'],
+        ],
+        'pecl:uuid scalability' => [
+            '1 procs' => [
+                'eval' => 'uuid_create(UUID_TYPE_TIME);',
+                'concurrency' => 1,
+            ] + $config['scalability'],
+            '2 procs' => [
+                'eval' => 'uuid_create(UUID_TYPE_TIME);',
+                'concurrency' => 2,
+            ] + $config['scalability'],
+            '4 procs' => [
+                'eval' => 'uuid_create(UUID_TYPE_TIME);',
+                'concurrency' => 4,
+            ] + $config['scalability'],
+            '8 procs' => [
+                'eval' => 'uuid_create(UUID_TYPE_TIME);',
+                'concurrency' => 8,
+            ] + $config['scalability'],
+            '16 procs' => [
+                'eval' => 'uuid_create(UUID_TYPE_TIME);',
+                'concurrency' => 16,
+            ] + $config['scalability'],
+            '32 procs' => [
+                'eval' => 'uuid_create(UUID_TYPE_TIME);',
+                'concurrency' => 32,
+            ] + $config['scalability'],
+        ],
+        'Generating 100000 UUID v1' => [
+            'charm/uuid' => [
+                'eval' => 'Charm\Id::uuid1();',
+                'repetitions' => 20,
+                'iterations' => 100000,
+            ],
+            'ramsey/uuid' => [
+                'eval' => 'Ramsey\Uuid\Uuid::uuid1();',
+                'repetitions' => 20,
+                'iterations' => 100000,
+            ],
+            'pecl:uuid' => [
+                'eval' => 'uuid_create(UUID_TYPE_TIME);',
+                'repetitions' => 20,
+                'iterations' => 100000,
+            ],
+        ],
+        'Generating 100000 UUID v1 in 2 processes' => [
+            'charm/uuid' => [
+                'eval' => 'Charm\Id::uuid1();',
+                'repetitions' => 20,
+                'iterations' => 50000,
+                'concurrency' => 2,
+            ],
+            'ramsey/uuid' => [
+                'eval' => 'Ramsey\Uuid\Uuid::uuid1();',
+                'repetitions' => 20,
+                'iterations' => 50000,
+                'concurrency' => 2,
+            ],
+            'pecl:uuid' => [
+                'eval' => 'uuid_create(UUID_TYPE_TIME);',
+                'repetitions' => 20,
+                'iterations' => 50000,
+                'concurrency' => 2,
+            ],
+        ],
+        'Generating 100000 UUID v4' => [
+            'charm/uuid' => [
+                'eval' => 'Charm\Id::uuid4();',
+                'repetitions' => 20,
+                'iterations' => 100000,
+            ],
+            'ramsey/uuid' => [
+                'eval' => 'Ramsey\Uuid\Uuid::uuid4();',
+                'repetitions' => 20,
+                'iterations' => 100000,
+            ],
+            'pecl:uuid' => [
+                'eval' => 'uuid_create(UUID_TYPE_RANDOM);',
+                'repetitions' => 20,
+                'iterations' => 100000,
+            ],
+        ],
+        'Generating 100000 UUID v4 in 2 processes' => [
+            'charm/uuid' => [
+                'eval' => 'Charm\Id::uuid4();',
+                'repetitions' => 20,
+                'iterations' => 50000,
+                'concurrency' => 2,
+            ],
+            'ramsey/uuid' => [
+                'eval' => 'Ramsey\Uuid\Uuid::uuid4();',
+                'repetitions' => 20,
+                'iterations' => 50000,
+                'concurrency' => 2,
+            ],
+            'pecl:uuid' => [
+                'eval' => 'uuid_create(UUID_TYPE_RANDOM);',
+                'repetitions' => 20,
+                'iterations' => 50000,
+                'concurrency' => 2,
+            ],
+        ],
+    ];
+
+    $args = new Charm\Util\ArgvParser([
+        'debug' => ['d', ['debug']],
+        'quiet' => ['q', ['quiet']],
+    ]);
+
+    $md = new Charm\Util\MarkdownRenderer();
+
+    $md->h1("Benchmark Results");
+
+    /**
+     * Validate $benchmarks array
+     */
+    foreach ($benchmarks as $title => $libs) {
+       
+        $keys = null;
+        foreach ($libs as $lib => $spec) {
+
+            // All libs must have the same keys
+            if ($keys === null) {
+                $keys = array_keys($spec);
+                sort($keys);
+            } else {
+                $compareKeys = array_keys($spec);
+                sort($compareKeys);
+                if ($compareKeys !== $keys) {
+                    throw new Exception("The '$title' tests does not all have the same keys");
+                }
+            }
+
+            // Libs can't have both duration and iterations
+            if (isset($spec['duration']) && isset($spec['iterations'])) {
+                throw new Exception("The '$title' test for '$lib' has both 'duration' and 'iterations' configured");
+            }
+        }
+    }
+
+    $testNumber = 1;
+    foreach ($benchmarks as $title => $libs) {
+        $md->h2("#$testNumber: $title");
+        $testNumber++;
+
+        $testStartTime = microtime(true);
+
+        $again = false;
+        do {
+            $again = false;
+            foreach ($libs as $lib => &$spec) {
+                if (!isset($spec['repetitions'])) {
+                    $spec['repetitions'] = 1;
+                }
+                if (!isset($spec['iterations'])) {
+                    $spec['iterations'] = 1;
+                }
+                if (!isset($spec['_repetitions'])) {
+                    $spec['_repetitions'] = 0;
+                }
+                if (!isset($spec['concurrency'])) {
+                    $spec['concurrency'] = 1;
+                }
+                if ($spec['repetitions'] > $spec['_repetitions']) {
+                    $spec['_repetitions']++;
+                    print_status("benchmarking (it=".$spec['repetitions'].", conc=".$spec['concurrency'].") ".$spec['_repetitions']." / ".$spec['repetitions'].": $lib");
+                    $again = true;
+                    $results = launch($spec, $spec['concurrency']);
+                    foreach ($results as $result) {
+                        if (isset($result['_exception'])) {
+                            print_error(
+                                $lib." threw exception '".get_class($result['_exception'])."'\n".
+                                " - file:    ".$result['_exception']->getFile()."\n".
+                                " - line:    ".$result['_exception']->getLine()."\n".
+                                " - message: ".$result['_exception']->getMessage()                            
+                            );
+                        }
+                        $spec['_results'][] = $result;
+                    }
+                }
+            }
+            unset($spec);
+        } while($again);
+
+        print_status("");
+
+        foreach ($libs as $lib => $spec) {
+            $result = [];
+            $count = 0;
+            foreach ($spec['_results'] as $temp) {
+                $count++;
+                foreach ($temp as $dim => $value) {
+                    if (is_int($value) || is_float($value)) {
+                        if (!isset($result[$dim]["sum"])) {
+                            $result[$dim]["sum"] = 0;
+                        }
+                        if (!isset($result[$dim]["average"])) {
+                            $result[$dim]["average"] = 0;
+                        }
+                        if (!isset($result[$dim]["median"])) {
+                            $result[$dim]["median"] = [];
+                        }
+                        if (!isset($result[$dim]["min"])) {
+                            $result[$dim]["min"] = $value;
+                        }
+                        if (!isset($result[$dim]["max"])) {
+                            $result[$dim]["max"] = $value;
+                        }
+                        if (!isset($result[$dim]["count"])) {
+                            $result[$dim]["count"] = 0;
+                        }
+                        $result[$dim]["sum"] += $value;
+                        $result[$dim]["count"]++;
+                        $result[$dim]["median"][] = $value;
+                        if ($value > $result[$dim]["max"]) {
+                            $result[$dim]["max"] = $value;
+                        }
+                        if ($value < $result[$dim]["min"]) {
+                            $result[$dim]["min"] = $value;
+                        }
+                        $result[$dim]["average"] = $result[$dim]["sum"] / $result[$dim]["count"];
+                    }
+                }
+            }
+            foreach ($result as $k => $measurements) {
+                foreach ($measurements as $kk => $v) {
+                    if (is_array($v) && count($v) > 0) {
+                        sort($v);
+                        $middle = floor(count($v) / 2);
+                        $result[$k][$kk] = $v[$middle];
+                    }
+                }
+            }
+            $libs[$lib]['_result'] = $result;
+        }
+
+        foreach ($libs as $lib => $tmp) {
+            break;
+        }
+
+        if (isset($tmp['duration'])) {
+
+            $rows = [
+                ['Name', 'Runs', 'Iter/s', 'Total time', 'Mem peak', 'Mem after', 'Included files' ],
+            ];
+            foreach ($libs as $lib => $spec) {
+                $rows[] = [
+                    $lib,
+                    $spec['_result']['includes']['count'],
+                    fmt_num($spec['_result']['iteration_count']['sum'] / ($spec['_result']['time']['average']), 2, "/sec"),
+                    fmt_num(1000*$spec['_result']['time']['sum'], 2, "ms"),
+                    fmt_num($spec['_result']['memory_peak']['average'] / 1024, 0, "kB"),
+                    fmt_num($spec['_result']['memory_gc']['average'] / 1024, 0, "kB"),
+                    $spec['_result']['includes']['average'],
+                ];
+            }
+            $md->table($rows);
+
+
+        } elseif (isset($tmp['iterations'])) {
+
+            $rows = [
+                ['Name', 'Runs', 'Iter/s', 'Average Time', 'Median Time', 'Fastest', 'Slowest', 'Mem peak', 'Mem after', 'Included files' ],
+            ];
+            foreach ($libs as $lib => $spec) {
+                $rows[] = [
+                    $lib,
+                    $spec['_result']['includes']['count'],
+                    fmt_num($spec['_result']['iteration_count']['sum'] / ($spec['_result']['time']['average']), 2, "/sec"),
+                    fmt_num(1000*$spec['_result']['time']['average'], 2, "ms"),
+                    fmt_num(1000*$spec['_result']['time']['median'], 2, "ms"),
+                    fmt_num(1000*$spec['_result']['time']['min'], 2, "ms"),
+                    fmt_num(1000*$spec['_result']['time']['max'], 2, "ms"),
+                    fmt_num($spec['_result']['memory_peak']['average'] / 1024, 0, "kB"),
+                    fmt_num($spec['_result']['memory_gc']['average'] / 1024, 0, "kB"),
+                    $spec['_result']['includes']['average'],
+                ];
+            }
+            $md->table($rows);
+
+
+        } else {
+
+        }
+
+        $md->p("  * Test took ".fmt_num(microtime(true) - $testStartTime)." seconds");
+    }
+
+    // Finished successfully
+    exit(0);
+
+    function launch(array $specs, int $concurrency=1): array {
+        global $argv;
+        $argv[1] = serialize($specs);
+
+        if (function_exists('pcntl_fork')) {
+            $children = [];
+            $results = [];
+            for ($childCount = 0; $childCount < $concurrency; $childCount++) {
+
+                // Forking is much faster than launching a new PHP interpreter
+                $fname = tempnam(sys_get_temp_dir(), 'benchmarking');
+                $fp = fopen($fname, 'w+');
+                $pid = pcntl_fork();
+
+                if ($pid == -1) {
+                    // Could not fork
+                    fclose($fp);
+                    unlink($fname);
+                    goto fork_failed;
+                } elseif ($pid) {
+                    // we are the parent
+                    $children[] = [
+                        'fname' => $fname,
+                        'pid' => $pid,
+                        'fp' => $fp,
+                    ];
+                } else {
+                    // we are the child
+                    ob_start();
+                    ftruncate($fp, 0);
+                    require(__DIR__.'/benchmark-run.php');
+                    $result = unserialize(ob_get_contents());
+                    ob_end_clean();
+                    usleep(0);
+                    fseek($fp, 0);
+                    fwrite($fp, (string) serialize($result));
+                    die();
+                }
+            }
+
+            foreach ($children as $child) {
+                pcntl_waitpid($child['pid'], $status);
+                usleep(0);
+                fseek($child['fp'], 0);
+                $resultString = stream_get_contents($child['fp']);
+                $result = unserialize($resultString);
+                $results[] = $result;
+                fclose($child['fp']);
+                unlink($child['fname']);
+            }
+            return $results;
+
+        } else {
+            fork_failed:
+            if ($concurrency > 1) {
+                throw new Exception("Concurrency > 1 not supported without `pcntl_fork`");
+            }
+            // Fallback to shell_exec
+            $t = shell_exec('exec php '.__DIR__.'/benchmark-run.php '.escapeshellarg(serialize($argv[1])));
+            return [ unserialize($t) ];
+        }
+    }
+
+    function print_status(string $status) {
+        global $args;
+        if ($args->get('quiet')) {
+            return;
+        }
+        fwrite(STDERR, "\r[Status]: ".str_pad($status, 76)."\r");
+    }
+
+    function print_error(string $message) {
+        global $args;
+        if ($args->get('quiet') > 1) {
+            return;
+        }
+        fwrite(STDERR, "\r".str_pad('', 76)."\r");
+        fwrite(STDOUT, "$message\n");
+    }
+
+    function print_log(int $minLevel, string $message) {
+        global $args;
+        if ($minLevel >= $args->get('debug')) {
+            fwrite(STDERR, "\r".str_pad('', 76)."\r");
+            fwrite(STDOUT, "$message\n");
+        }
+    }
+
+    function fmt_num($value, int $decimals=0, string $unit='') {
+        if ($unit !== '' && $unit[0] !== '/') {
+            $unit = ' ' . $unit;
+        }
+        return number_format($value, $decimals, ".", "").$unit;
+    }
+}
+namespace Charm\Util {
+    class ArgvParser {
+        private $optionMap;
+
+        /**
+         * Format of optionsMap is:
+         * [
+         *   'verbosity'    => [ 'v', ['verbose'], ],                       // a flag without value
+         *   'loglevel'     => [ 'l', ['loglevel'], 'value' => true ],      // an argument that requires a value, for example '-l DEBUG'
+         *   'something'    => [ 's', ['something'], 'value' => "123" ],    // an argument that optionally takes a value, and defaults to the specified value
+         * ]
+         *
+         * @param array $optionAliases Maps internal option names to short options and long options
+         */
+        public function __construct(array $optionMap = []) {
+            $this->optionMap = $optionMap;
+        }
+
+        private function fail(string $message, int $code=255) {
+            fwrite(STDERR, "Error: $message\n");
+            exit($code);
+        }
+
+        public function get(string $optionName) {
+            $spec = $this->getSpec($optionName);
+            if (!array_key_exists('value', $spec)) {
+                $spec['value'] = false;
+            }
+
+            if ($spec['value'] === false) {
+                $suffix = '';
+            } elseif ($spec['value'] === true) {
+                $suffix = ':';
+            } else {
+                $suffix = '::';
+            }
+
+            $longOpts = [];
+            foreach ($spec[1] as $longOpt) {
+                $longOpts[] = $longOpt.$suffix;
+            }
+
+            $result = getopt($spec[0].$suffix, $longOpts);
+            $value = $spec['value'] ?? false;
+
+            if ($value === false) {
+                if (empty($result)) {
+                    return 0;
+                }
+                $count = 0;
+                foreach ($result as $p) {
+                    if (is_array($p)) {
+                        $count += sizeof($p);
+                    } else {
+                        $count += 1;
+                    }
+                }
+                return $count;
+            } elseif ($value !== true) {
+                // We have a default value which is returned if the flag was passed
+                if (!empty(getopt($spec[0], $spec[1]))) {
+                    return $value;
+                }
+            } else {
+                // If the flag was passed, we MUST have a value
+                if (empty($result) && !empty(getopt($spec[0], $spec[1]))) {
+                    $this->fail("Option '".$optionName."' expects a value");
+                }
+
+                $finalValue = null;
+                foreach ($result as $flagname => $value) {
+                    if (is_array($value)) {
+                        $this->fail("Multiple values given for '$flagname'");
+                    } elseif ($finalValue !== null) {
+                        $this->fail("Already have a value for '$flagname'");
+                    } else {
+                        $finalValue = $value;
+                    }
+                }
+                return $finalValue;
+            }
+        }
+
+        private function getSpec(string $optionName) {
+            if (!isset($this->optionMap[$optionName])) {
+                throw new Exception("Undeclared option name '$optionName'");
+            }
+            return $this->optionMap[$optionName];
+        }
+    }
+
+    class MarkdownRenderer {
+        private $fd;
+
+        public function __construct($fd=STDOUT) {
+            $this->fd = $fd;
+        }
+
+        public function write(string $string) {
+            fwrite($this->fd, $string);
+        }
+
+        public function h1(string $title) {
+            $this->write($title."\n");
+            $this->write(str_repeat("=", mb_strlen($title))."\n\n");
+        }
+        public function h2(string $title) {
+            $this->write($title."\n");
+            $this->write(str_repeat("-", mb_strlen($title))."\n\n");
+        }
+        public function h3(string $title) {
+            $this->write("### ".$title."\n\n");
+        }
+        public function p(string $paragraph) {
+            $this->write(chunk_split($paragraph, 76, "\n")."\n");
+        }
+        public function table(array $rows) {
+            $cols = [];
+            foreach ($rows as $rn => $row) {
+                foreach ($row as $cn => $col) {
+                    $len = mb_strlen($col);
+                    if (!isset($cols[$cn])) {
+                        $cols[$cn] = $len;
+                    } elseif ($cols[$cn] < $len) {
+                        $cols[$cn] = $len;
+                    }
+                }
+            }
+            foreach ($rows as $rn => $row) {
+                $this->write('|');
+
+                foreach ($cols as $cn => $col) {
+                    $val = '';
+                    if (isset($row[$cn])) {
+                        $val = $row[$cn];
+                    }
+                    if ($cn > 0 && ltrim($val, '0123456789') !== $val) {
+                        $this->write(" ".str_pad($row[$cn], $col, " ", STR_PAD_LEFT)." |");
+                    } else {
+                        $this->write(" ".str_pad($row[$cn], $col, " ", STR_PAD_RIGHT)." |");
+                    }
+                }
+
+                $this->write("\n");
+
+                if ($rn === 0) {
+                    $this->write("|");
+                    foreach ($cols as $cn => $col) {
+                        $this->write(str_repeat("-", $col + 2)."|");
+                    }
+                    $this->write("\n");
+                }
+            }
+            $this->write("\n");
+        }
+    }
+}

@@ -1,8 +1,12 @@
 <?php
 namespace Charm\Util;
 
-use Closure;
-
+/**
+ * Warning! This library has not been tested with *threaded* PHP where each thread shares memory. In
+ * particular, the `self::$sequenceNumberOffset++` expression may be of concern as it is not atomic. You
+ * may want to wrap the generation of UUIDs in a `Thread::synchronized()` closure. It is not sufficient
+ * to have separate instances of IdFactory for each thread.
+ */
 class IdFactory {
 
     const TYPE_UUID_V1 = 0;
@@ -20,12 +24,21 @@ class IdFactory {
         'epoch' => 1546300800,
 
         /**
-         * Sequence number is incremented for every ID that is generated. This is used to ensure that the ID is
-         * unique, even if two IDs are generated within the same time window on the same computer. The value is
-         * initialized to a random 32 bit number. The different algorithms will truncate the number to use the
-         * neccesary number of least significant bits.
+         * The sequence number is incremented by 1 for every new non-random ID generated. This helps protect
+         * against the unlikely event that two ID numbers are generated in the exact same microsecond.
+         *
+         * The initial sequence number is by default the current PID number from `getmypid()` multiplied by the
+         * prime number 19423.
+         *
+         * Different algorithms use a limited number of bits from this sequence number, so it is possible - while
+         * very unlikely that two instances of IdFactory running in different processes will calculate the exact
+         * same sequence number on the exact same microsecond. This is more likely if you have many CPU cores and
+         * each process is generating a lot of IDs continously.
+         *
+         * If the PID changes, the initial sequence number will be recalculated.
+         *
          */
-        'initialSequenceNumber' => null,
+        'initialSequenceNumberFunction' => null,
 
         /**
          * Override the machine ID. This ID is used in all ID schemes, except UUID v4 which is completely random.
@@ -79,15 +92,21 @@ class IdFactory {
 
     protected int $type;
     protected int $epoch;
-    protected int $sequenceNumber;
+    protected int $initialSequenceNumber;
     protected int $hrOffset;
-    private ?int $_machineId = null;
+    protected ?int $_machineId = null;
+
+    /**
+     * Used by `self::getSequenceNumber()` to trigger generating a new initial sequence number
+     */
+    private ?int $pid = null;
+
+    protected static int $sequenceNumberOffset = 0;
 
     public function __construct(int $type=self::TYPE_UUID_V4, array $options=[]) {
         $this->type = $type;
         $this->options = $options + self::OPTIONS;
         $this->epoch = $this->options['epoch'];
-        $this->sequenceNumber = $this->getInitialSequenceNumber();
         $this->nanoTime();
     }
 
@@ -96,7 +115,7 @@ class IdFactory {
      * *first* call to this function will be rounded to microsecond precision.
      * Nanosecond precision is achieved from consecutive calls to this function.
      */
-    public static function nanoTime() {
+    public static function nanoTime(int $offset=0) {
         static $diff = null;
         $nt = hrtime();
         if ($diff === null) {
@@ -120,11 +139,12 @@ class IdFactory {
 
     /**
      * Returns a 64 bit timestamp, where 36 bits is used for the seconds and
-     * 28 bits is used for the fractions of a second. The precision is about
-     * 4 nanoseconds.
+     * 28 bits is used for the fractions of a second elapsed since the Unix
+     * epoch. The precision is about4 nanoseconds (a second is divided into
+     * 268-millionths). The number will overflow in the year 4147.
      */
-    public static function hexNanoTime() {
-        $nt = static::nanoTime();
+    public static function hexNanoTime(int $offset = 0) {
+        $nt = static::nanoTime($offset);
         $fraction = $nt[1];
         $binaryFraction = 0;
         for ($i = 0; $i < 28; $i++) {
@@ -139,8 +159,9 @@ class IdFactory {
     }
 
     /**
-     * Generate a "comb uuid", which is is sequential and validates as an UUID v4. 60 bits is used for the time stamp,
-     * where 24 bits is used for the fraction of a second and the timestamp begins at UNIX epoch
+     * Generate a "comb uuid", which is sequential (sorted) and validates as a
+     * UUID v4. 60 bits is used for the time stamp, where 24 bits is used for
+     * the fraction of a second and the timestamp begins at UNIX epoch.
      *
      * Specification:
      *
@@ -156,22 +177,28 @@ class IdFactory {
             substr($ts, 0, 8).
             '-'.substr($ts, 8, 4).
             '-4'.substr($ts, 12, 3).
-            '-'.sprintf('%04x-%012x', ($this->sequenceNumber++ & 0x3FFF) + 0x8000, $this->getMachineId() & 0xFFFFFFFFFFFF);
+            '-'.sprintf('%04x-%012x', ($this->getSequenceNumber() & 0x3FFF) + 0x8000, $this->getMachineId() & 0xFFFFFFFFFFFF);
 
         return $res;
     }
 
     /**
-     * Generate an UUID version 1 variant 1 (time stamp and machine ID). Traditionally this used to be fetched
-     * from the mac address, but RFC 4122 allows the use of another ID.
+     * Generate an UUID(1) based on a time stamp and machine ID. Traditionally this
+     * used to be fetched from the mac address, but RFC 4122 allows the use of another
+     * ID.
      *
      * Specification:
      *
-     *   Timestamp          60 bit      The number of 100-nanosecond intervals since the start of the Julian calendar
-     *   Machine ID         48 bit      A unique number for the current computer. Should be globally unique.
-     *   Clock Sequence     13 bit      A "uniquifying" clock sequence which increments by one for every ID generated
+     *   Timestamp          60 bit      The number of 100-nanosecond intervals since
+     *                                  the start of the Julian calendar
+     *   Machine ID         48 bit      A unique number for the current computer.
+     *                                  Should be globally unique.
+     *   Clock Sequence     13 bit      A "uniquifying" clock sequence which increments
+     *                                  by one for every ID generated to protect against
+     *                                  simultaneous IDs generated on the same computer.
      *
-     * Return value is a 128 bit UUID string encoded according to the standard, or as a 128 bit big-endian binary string.
+     * Return value is a 128 bit UUID string encoded according to the standard, or as a
+     * 128 bit big-endian binary string.
      */
     public function v1(bool $binary=false) {
         // Timestamp 60 bit (since we don't have an accurate enough clock, we make up the last decimal
@@ -180,7 +207,7 @@ class IdFactory {
         // Machine ID 48 bit
         $nodeId = $this->getMachineId() & 0xFFFFFFFFFFFF;
 
-        $clockSequence = $this->sequenceNumber++ & 0x3FFF;
+        $clockSequence = $this->getSequenceNumber() & 0x3FFF;
 
         $timeLow = $ts & 0xFFFFFFFF;                                // 32 bit
         $timeMid = ($ts >> 32) & 0xFFFF;                            // 16 bit
@@ -217,8 +244,8 @@ class IdFactory {
     }
 
     /**
-     * Generate a cryptographically random version 4 UUID string.
-     * UUID v4 is a random number with no time or spatial component.
+     * Generate a UUID(4) - a cryptographically random identifier. This number can be safely generated
+     * without any configuration.
      */
     public static function v4(): string {
         $hex = bin2hex($bytes = random_bytes(18));
@@ -245,14 +272,13 @@ class IdFactory {
         return (string) UUID::fromHex($bytes);
     }
 
-
     /**
      * Generate a snowflake ID.
      */
     public function snowflake(): int {
         return ((((microtime(true) - $this->epoch) * 1000) & 0x1FFFFFFFFFF) << 22)
             | ((($this->_machineId ?? $this->getMachineId()) & 0x3FF) << 12)
-            | ($this->sequenceNumber++ & 0xFFF);
+            | ($this->getSequenceNumber() & 0xFFF);
     }
 
     /**
@@ -261,12 +287,15 @@ class IdFactory {
     public function instaflake(): int {
         return ((intval((microtime(true) - $this->epoch) * 1000) & 0x1FFFFFFFFFF) << 22)
             | ((($this->_machineId ?? $this->getMachineId()) & 0x1FFF) << 10)
-            | ($this->sequenceNumber++ & 0x3FF);
+            | ($this->getSequenceNumber() & 0x3FF);
     }
 
+    /**
+     * Generate a SonyFlake ID
+     */
     public function sonyflake(): int {
         return ((intval((microtime(true) - $this->epoch) * 100) & 0x7FFFFFFF) << 24)
-            | (($this->sequenceNumber++ & 0xFF) << 16)
+            | (($this->getSequenceNumber() & 0xFF) << 16)
             | (($this->_machineId ?? $this->getMachineId()) & 0xFFFF);
     }
 
@@ -348,15 +377,33 @@ class IdFactory {
         return $this->_machineId = random_int(0, 0xFFFFFFFFFFFF | (1 << 40));
     }
 
-    private function getInitialSequenceNumber(): int {
-        if ($this->options['initialSequenceNumber'] !== null) {
-            return $this->options['initialSequenceNumber'];
+    /**
+     * Generates a new sequence number which can be used to generate a new ID.
+     */
+    public function getSequenceNumber(): int {
+        if ($this->pid !== getmypid()) {
+            $this->setInitialSequenceNumber();
+            $this->pid = getmypid();
         }
-        $sequenceNumber = getmypid();
-        $sequenceNumber |= $sequenceNumber << 16;
-        return $sequenceNumber;
+        if (0x7FFFFFFFFFFFFFFF === ++self::$sequenceNumberOffset) {
+            self::$sequenceNumberOffset = 0;
+        }
+        return ($this->initialSequenceNumber + self::$sequenceNumberOffset) & 0x7FFFFFFFFFFFFFFF;
     }
 
+    /**
+     * Set/reset the initial sequence number
+     */
+    protected function setInitialSequenceNumber(): void {
+        if ($this->options['initialSequenceNumberFunction'] !== null) {
+            $this->initialSequenceNumber = $this->options['initialSequenceNumberFunction']();
+        }
+        $this->initialSequenceNumber = 19423 * getmypid();
+    }
+
+    /**
+     * Generate the ID type that was configured in the constructor.
+     */
     public function __invoke() {
         switch ($this->type) {
             case self::TYPE_UUID_V1 :
