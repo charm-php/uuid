@@ -45,17 +45,24 @@ final class Id {
     }
 
     /**
+     * Generate a new UUID version 3
+     */
+    public static function uuid3($ns, string $name): string {
+        return self::getFactory()->v3($ns, $name);
+    }
+
+    /**
      * Generate a new UUID version 4
      */
     public static function uuid4(): string {
-        $hex = bin2hex($bytes = random_bytes(18));
-        $hex[8] = '-';
-        $hex[13] = '-';
-        $hex[14] = '4';
-        $hex[18] = '-';
-        $hex[19] = '89ab'[ord($bytes[9]) >> 6];
-        $hex[23] = '-';
-        return $hex;
+        return self::getFactory()->v4();
+    }
+
+    /**
+     * Generate a new UUID version 5
+     */
+    public static function uuid5($ns, string $name): string {
+        return self::getFactory()->v5($ns, $name);
     }
 
     /**
@@ -95,7 +102,7 @@ final class Id {
      * Returns the configured factory or a new instance
      */
     private static function getFactory() {
-        return self::$factory ?? new IdFactory();
+        return self::$factory ?? (self::$factory = new IdFactory());
     }
 
 }

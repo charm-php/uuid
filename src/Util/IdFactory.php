@@ -203,6 +203,20 @@ class IdFactory {
     }
 
     /**
+     * Generate an UUID v3 based on a namespace and a string. This UUID is intended
+     * to be used as a unique identifier for things.
+     */
+    public static function v3($namespace, string $name) {
+        $uuid = UUID::fromUUID($namespace);
+
+        $bytes = md5($uuid->toBytes() . $name);
+        $bytes[12] = '3';
+        $bytes[16] = dechex(hexdec($bytes[16]) & ~4 | 8);
+
+        return (string) UUID::fromHex($bytes);
+    }
+
+    /**
      * Generate a cryptographically random version 4 UUID string.
      * UUID v4 is a random number with no time or spatial component.
      */
@@ -216,6 +230,21 @@ class IdFactory {
         $hex[23] = '-';
         return $hex;
     }
+
+    /**
+     * Generate an UUID v5 based on a namespace and a string. This UUID is intended
+     * to be used as a unique identifier for things.
+     */
+    public static function v5($namespace, string $name) {
+        $uuid = UUID::fromUUID($namespace);
+
+        $bytes = sha1($uuid->toBytes() . $name);
+        $bytes[12] = '5';
+        $bytes[16] = dechex(hexdec($bytes[16]) & ~4 | 8);
+
+        return (string) UUID::fromHex($bytes);
+    }
+
 
     /**
      * Generate a snowflake ID.
