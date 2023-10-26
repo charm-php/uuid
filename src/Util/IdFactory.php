@@ -95,6 +95,7 @@ class IdFactory {
     protected int $initialSequenceNumber;
     protected int $hrOffset;
     protected ?int $_machineId = null;
+    private array $options;
 
     /**
      * Used by `self::getSequenceNumber()` to trigger generating a new initial sequence number
