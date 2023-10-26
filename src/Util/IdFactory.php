@@ -277,7 +277,7 @@ class IdFactory {
      * Generate a snowflake ID.
      */
     public function snowflake(): int {
-        return ((((microtime(true) - $this->epoch) * 1000) & 0x1FFFFFFFFFF) << 22)
+        return ((intval((microtime(true) - $this->epoch) * 1000) & 0x1FFFFFFFFFF) << 22)
             | ((($this->_machineId ?? $this->getMachineId()) & 0x3FF) << 12)
             | ($this->getSequenceNumber() & 0xFFF);
     }
