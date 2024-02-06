@@ -94,7 +94,7 @@ class IdFactory {
     protected int $epoch;
     protected int $initialSequenceNumber;
     protected int $hrOffset;
-    protected ?int $_machineId = null;    
+    protected ?int $_machineId = null;
     private array $options;
 
     /**
