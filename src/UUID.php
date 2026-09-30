@@ -19,7 +19,7 @@ class UUID {
      * Generate a UUID v1 string. This function uses the machine-id instead
      * of the mac address.
      */
-    public static function v1(string $nodeIdHex=null, int $clockSequence = null): string {
+    public static function v1(?string $nodeIdHex=null, ?int $clockSequence = null): string {
         // Timestamp 60 bit
         $ts = (int) (microtime(true) * 10000000) + mt_rand(0,9) + 0x01b21dd213814000;
 

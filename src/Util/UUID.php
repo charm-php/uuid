@@ -114,7 +114,7 @@ class UUID implements JsonSerializable {
     public static function fromHex(string $hex): UUID {
         $chunks = str_split($hex, 4);
         if (!isset($chunks[7]) || strlen($chunks[7]) !== 4) {
-            throw new TypeError("Expecting at least 32 hex characters");
+            throw new \TypeError("Expecting at least 32 hex characters");
         }
         return new UUID("{$chunks[0]}{$chunks[1]}-{$chunks[2]}-{$chunks[3]}-{$chunks[4]}-{$chunks[5]}{$chunks[6]}{$chunks[7]}");
     }
@@ -123,14 +123,40 @@ class UUID implements JsonSerializable {
      * Convert an 128 bit integer string to an UUID
      */
     public static function fromInteger(string $integer): UUID {
-        return self::fromHex(base_convert($integer, 10, 16));
+        // Repeated division by 16 on the decimal string; base_convert() goes through a float and loses precision
+        $hex = '';
+        while ($integer !== '0' && $integer !== '') {
+            $quotient = '';
+            $remainder = 0;
+            foreach (str_split($integer) as $digit) {
+                $remainder = $remainder * 10 + (int) $digit;
+                $quotient .= intdiv($remainder, 16);
+                $remainder %= 16;
+            }
+            $hex = dechex($remainder) . $hex;
+            $integer = ltrim($quotient, '0');
+        }
+        return self::fromHex(str_pad($hex, 32, '0', STR_PAD_LEFT));
     }
 
     /**
      * Get 128 bit integer representation of the UUID as a string
      */
     public function toInteger(): string {
-        return base_convert($this->toHex(), 16, 10);
+        // Decimal digits, least significant first
+        $digits = [0];
+        foreach (str_split($this->toHex()) as $nibble) {
+            $carry = hexdec($nibble);
+            foreach ($digits as $i => $digit) {
+                $value = $digit * 16 + $carry;
+                $digits[$i] = $value % 10;
+                $carry = intdiv($value, 10);
+            }
+            for (; $carry > 0; $carry = intdiv($carry, 10)) {
+                $digits[] = $carry % 10;
+            }
+        }
+        return implode('', array_reverse($digits));
     }
 
     /**
