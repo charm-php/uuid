@@ -16,6 +16,7 @@
     ],
     "minimum-stability": "stable",
     "require-dev": {
-        "ramsey/uuid": "^4.1"
+        "ramsey/uuid": "^4.1",
+        "phpunit/phpunit": "^11.5"
     }
 }
